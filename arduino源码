@@ -1,0 +1,234 @@
+#include <IRremote.h>
+#include <U8glib.h>
+#define INTERVAL_LCD             20             //定义OLED刷新时间间隔  
+
+int RECV_PIN = 10;
+IRrecv irrecv(RECV_PIN);
+decode_results results;
+unsigned long lcd_time = millis();                 //OLED刷新时间计时器
+U8GLIB_SSD1306_128X64 u8g(U8G_I2C_OPT_NONE);     //设置OLED型号  
+
+//----------字体设置，大、中、小-------------
+#define setFont_L u8g.setFont(u8g_font_7x13)
+#define setFont_M u8g.setFont(u8g_font_fixed_v0r)
+#define setFont_S u8g.setFont(u8g_font_fixed_v0r)
+#define setFont_SS u8g.setFont(u8g_font_fub25n）
+#define val_max 255
+#define val_min 0
+#ifdef ESP32
+#error "This code is not recommended to run on the ESP32 platform! Please check your Tools->Board setting."
+#endif
+#if defined(__AVR_ATmega32U4__) || defined(__AVR_ATmega1284P__) || defined (__AVR_ATmega644P__) || defined(__AVR_ATmega128RFA1__)
+#define EspSerial Serial1
+#endif
+#if defined (__AVR_ATmega168__) || defined (__AVR_ATmega328__) || defined (__AVR_ATmega328P__)
+#include <SoftwareSerial.h>
+SoftwareSerial mySerial(2, 3); 
+
+#include <Wire.h>                                  //调用库  
+#include <ESP8266.h>
+#include <I2Cdev.h>
+#define EspSerial mySerial
+ESP8266 wifi(&EspSerial);
+
+//---------------从onenet上获取数据-----------------
+#define UARTSPEED  9600
+#endif
+#define SSID        F("Keep Quiet!")//WIFI名
+#define PASSWORD    F("23333333")//WIFI密码
+#define HOST_NAME   F("api.heclouds.com")//域名
+#define HOST_PORT   (80)
+static const byte  GETDATA[]  PROGMEM = {
+  "GET https://api.heclouds.com/devices/503120343/datapoints?datastream_id=a,b,c&limit=1 HTTP/1.1\r\nHost:api.heclouds.com\r\napi-key:feVkCC5ekdC7dcFQEXSC2x7DaJk=\r\nConnection: close\r\n\r\n"
+};//关键头文件
+/* "GET https://api.heclouds.com/devices/23334240/datapoints?datastream_id=id,status,precent&limit=1 //url+  【 datapoints？datastream id=】 你的几个数据名称【&limit=】（几个数据1个表示最近）
+ *  HTTP/1.1\r\n
+ *  Host:api.heclouds.com//域名
+ *  \r\n
+ *  api-key:sCCE3BRbnvyyKsX1iWY7=dSFlME=///API
+ *  \r\nConnection: close\r\n\r\n"
+*/
+
+//-----------------汉字字模数组---------------------
+const   uint8_t bitmap_qing []   U8G_PROGMEM  ={  
+0x00,0x00,0x00,0x80,0x23,0xF8,0x00,0x80,0x03,0xF0,0x50,0x88,0x2F,0x70,0x23,0xF0,
+0x22,0x10,0x23,0xF0,0x2A,0x10,0x13,0xF0,0x32,0x10,0x02,0x30,0x00,0x00,/*"请",0*/
+};
+      
+
+北京-张昊宇 2018/12/19 17:28:02
+const   uint8_t bitmap_wu []   U8G_PROGMEM  ={  
+0x00,0x00,0x0C,0x00,0x08,0x00,0x1D,0x70,0x12,0x90,0x24,0x90,0x44,0x90,0x08,0x90,
+0x11,0x10,0x31,0x10,0x42,0x10,0x04,0x10,0x08,0x90,0x30,0x60,0x00,0x00,/*"勿",1*/
+};
+const   uint8_t bitmap_xuan []   U8G_PROGMEM  ={  
+0x00,0x00,0x00,0x80,0x00,0x80,0x7F,0x70,0x54,0x20,0x57,0xF0,0x54,0x20,0x53,0xE0,
+0x52,0x20,0x73,0xE0,0x42,0x20,0x03,0xE0,0x04,0x00,0x0F,0xF8,0x00,0x00,/*"喧",2*/
+};
+const   uint8_t bitmap_hua []   U8G_PROGMEM  ={  
+0x00,0x00,0x01,0x40,0x02,0x40,0x7A,0x58,0x4A,0x60,0x4E,0xC8,0x4B,0x48,0x4A,0x48,
+0x4A,0xB0,0x70,0x88,0x43,0xF0,0x00,0x80,0x00,0x80,0x00,0x80,0x00,0x00,/*"哗",3*/
+};
+const   uint8_t bitmap_tao []   U8G_PROGMEM  ={  
+0x00,0x00,0x20,0x20,0x10,0x20,0x10,0x20,0x03,0xF8,0x00,0x20,0x20,0x20,0x22,0x20,
+0x21,0x20,0x21,0x20,0x28,0x20,0x30,0x20,0x30,0x20,0x00,0xC0,0x00,0x00,/*"讨",2*/
+};
+const   uint8_t bitmap_lun []   U8G_PROGMEM  ={  
+0x00,0x00,0x20,0x80,0x10,0x80,0x11,0x40,0x01,0x20,0x02,0x30,0x76,0x18,0x19,0x20,
+0x11,0x60,0x11,0x80,0x15,0x00,0x19,0x10,0x11,0x10,0x11,0xF0,0x00,0x00,/*"论",3*/
+};
+
+const   uint8_t bitmap_xiu []   U8G_PROGMEM  ={  
+0x00,0x00,0x07,0xE0,0x09,0x00,0x01,0x18,0x3F,0xE0,0x05,0x40,0x19,0x20,0x3B,0x18,
+0x44,0x80,0x04,0x80,0x04,0x70,0x08,0x20,0x10,0x20,0x20,0x60,0x00,0x00,/*"秀",2*/
+};
+const   uint8_t bitmap_en []   U8G_PROGMEM  ={  
+0x00,0x00,0x00,0x00,0x3F,0xE0,0x22,0x20,0x2F,0xE0,0x22,0x20,0x23,0xA0,0x24,0x60,
+0x1F,0xE0,0x22,0x00,0x29,0x10,0x29,0x08,0x68,0x48,0x4F,0xE0,0x00,0x00,/*"恩",3*/
+};
+const   uint8_t bitmap_ai []   U8G_PROGMEM  ={  
+0x00,0x00,0x01,0xF0,0x1E,0x20,0x09,0x20,0x09,0x40,0x3F,0xF8,0x42,0x10,0x1F,0xE0,
+0x04,0x00,0x07,0xE0,0x0A,0x40,0x09,0x80,0x11,0x80,0x2E,0x78,0x00,0x00,/*"爱",4*/
+};
+
+//----------------打印汉字的函数--------------------
+void drawqing(void) {
+  u8g.setColorIndex(1);
+  u8g.drawBitmapP ( 20 , 0 , 2 , 16 , bitmap_qing); 
+ }   
+ void drawwu(void) {
+  u8g.setColorIndex(1);
+  u8g.drawBitmapP ( 37 , 0 , 2 , 16 , bitmap_wu); 
+ }   
+ void drawxuan(void) {
+  u8g.setColorIndex(1);
+  u8g.drawBitmapP ( 54 , 0 , 2 , 16 , bitmap_xuan); 
+ }   
+  void drawhua(void) {
+  u8g.setColorIndex(1);
+  u8g.drawBitmapP ( 71 , 0 , 2 , 16 , bitmap_hua); 
+ }   
+ void drawtao(void) {
+  u8g.setColorIndex(1);
+  u8g.drawBitmapP ( 54 , 0 , 2 , 16 , bitmap_tao); 
+ }   
+  void drawlun(void) {
+  u8g.setColorIndex(1);
+  u8g.drawBitmapP ( 71 , 0 , 2 , 16 , bitmap_lun); 
+ }   
+  void drawxiu(void) {
+  u8g.setColorIndex(1);
+  u8g.drawBitmapP ( 54 , 0 , 2 , 16 , bitmap_xiu); 
+ }   
+  void drawen(void) {
+  u8g.setColorIndex(1);
+  u8g.drawBitmapP ( 71 , 0 , 2 , 16 , bitmap_en); 
+ }   
+   void drawai(void) {
+  u8g.setColorIndex(1);
+  u8g.drawBitmapP ( 88 , 0 , 2 , 16 , bitmap_ai); 
+ }   
+
+void setup(){
+        Serial.begin(9600);
+        Serial.println("complete.");
+        WifiInit(EspSerial, UARTSPEED)；
+
+        Serial.print(F("FW Version:"));
+        Serial.println(wifi.getVersion().c_str());
+
+     if (wifi.setOprToStationSoftAP()) 
+        {
+          Serial.print(F("to station + softap ok\r\n"));
+        } 
+     else 
+        {
+          Serial.print(F("to station + softap err\r\n"));
+        }
+
+     if (wifi.joinAP(SSID, PASSWORD)) 
+       {
+        Serial.print(F("Join AP success\r\n"));
+        Serial.print(F("IP:"));
+        Serial.println( wifi.getLocalIP().c_str());
+        } 
+     else 
+        {
+        Serial.print(F("Join AP failure\r\n"));
+        }
+   }
+      
+void loop() {
+        u8g.firstPage();
+        
+     if (wifi.createTCP(HOST_NAME, HOST_PORT)) 
+        { 
+        Serial.print(F("create tcp ok\r\n")); 
+        } 
+     else 
+        { 
+        Serial.print(F("create tcp err\r\n")); 
+        } 
+        
+        wifi.sendFromFlash(GETDATA, sizeof(GETDATA)); //从Flash读取发送内容，节约内存 
+        uint8_t buffer[512] = {0};                  
+        uint32_t len = wifi.recv(buffer, sizeof(buffer), 20000); 
+    if (len > 0)
+        {
+          for (uint32_t i = 0; i < len; i++) 
+          {
+          if((char)buffer[i]=='v'&&(char)buffer[i+1]=='a'&&(char)buffer[i+2]=='l'&&(char)buffer[i+3]=='u'&&(char)buffer[i+4]=='e')//检测value单词
+             {
+               if ((char)buffer[i + 7] == '1') //请勿喧哗！
+                  {
+                    do {
+                    drawqing();
+                    drawwu();
+                    drawxuan();
+                    drawhua();  
+                    setFont_L;
+                    u8g.setPrintPos(90, 12);//此处单独打印叹号，由于用字模打印的叹号不清楚
+                    u8g.print("!");
+                    }while( u8g.nextPage() );
+                  }
+              else if((char)buffer[i + 7] == '2') //请勿讨论！
+                  {
+                    do {
+                     drawqing();
+                     drawwu();
+                     drawtao();
+                     drawlun();
+                     setFont_L;
+                     u8g.setPrintPos(90, 12);
+                     u8g.print("!");
+                     }while( u8g.nextPage() );
+                  }
+             else if((char)buffer[i + 7] == '3') //请勿秀恩爱！
+                {
+                   do {
+                    drawqing();
+                    drawwu();
+                    drawxiu();
+                    drawen();
+                    drawai();
+                    setFont_L;
+                    u8g.setPrintPos(110, 12);
+                    u8g.print("!");
+                    }while( u8g.nextPage() );
+                }
+        if (wifi.releaseTCP()) 
+           { 
+           Serial.print(F("release tcp ok\r\n")); 
+           } 
+        else 
+           { 
+           Serial.print(F("release tcp err\r\n")); 
+           } 
+     delay(100); 
+     irrecv.resume();  //接收下一个值
+             }
+          }
+        }
+ }
+  
+
