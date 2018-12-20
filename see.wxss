@@ -1,0 +1,11 @@
+/* see.wxss */
+.container1{
+   display:flex;
+  flex-direction: row;
+  justify-content: space-around
+}
+.container{
+   background: url('http://www.pptbz.com/pptpic/UploadFiles_6909/201105/2011051707540330.jpg')no-repeat;
+  background-size: 100% 100%
+  
+}
