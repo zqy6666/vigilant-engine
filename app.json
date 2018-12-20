@@ -1,0 +1,45 @@
+{
+  "pages": [
+    "pages/main/main",
+    "pagesee",
+    "pages/write/write",
+    "pages/clock/clock",
+    "pagesttingtting"
+    ],
+  "window": {
+    "navigationBarBackgroundColor": "#fff",
+    "navigationBarTextStyle": "black"
+  },
+"tabBar": {
+  "list": [
+    {
+      "text": "主页",
+      "pagePath": "pages/main/main",
+      "iconPath": "images/icons/main.png",
+      "selectedIconPath": "images/icons/main-selected.png"
+    },
+    {
+      "text": "看到",
+      "pagePath": "pagesee",
+      "iconPath": "images/iconse.png",
+      "selectedIconPath": "images/iconse-selected.png"
+    },
+    {
+      "text": "关于",
+      "pagePath": "pages/write/write",
+      "iconPath": "images/icons/write.png",
+      "selectedIconPath": "images/icons/write-selected.png"
+    },
+    {
+      "text": "时钟",
+      "pagePath": "pages/clock/clock",
+      "iconPath": "images/icons/clock.png",
+      "selectedIconPath": "images/icons/clock-selected.png"
+    }
+    
+   ],
+  "color": "#000",
+  "selectedColor": "#00f"
+}
+
+}
