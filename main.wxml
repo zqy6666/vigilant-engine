@@ -1,0 +1,25 @@
+<!-- main.wxml -->
+<view class='back'>
+<view class='container'>
+ <text style='font-weight:bold;font-size:40px;' >图书馆小助手</text> 
+<!-- 幻灯片放映 -->
+<swiper  indicator-dots='{{indicatorDots}}' autoplay='{{autoplay}}' interval='{{interval}}' duration='{{duration}}'>
+<!-- 下面也可以用block wx:for进行列表渲染 -->
+<swiper-item > 
+<image class='main-image' src='/images/tushuguan/1.png'></image>    
+</swiper-item>
+<swiper-item > 
+<image class='main-image' src='/images/tushuguan/2.png'></image>     
+</swiper-item>
+<swiper-item > 
+<image class='main-image' src='/images/tushuguan/3.png'></image>     
+</swiper-item>
+</swiper>
+
+<text class='content' >亲爱的北邮学子们</text>
+<text class='content' >欢迎来到自习室自习</text>
+<text style='color:red;font-weight:bolder;font-size:50px; margin-left:100px' >但是</text>
+<iew>
+
+
+<iew>
